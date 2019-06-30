@@ -94,6 +94,8 @@ export default function FormContainer() {
     product: '',
     cost: '' 
   });
+  const [price, setPrice] = React.useState('');
+  const [margin, setMargin] = React.useState('');
   const [vendorOptions, setVendorOptions] = React.useState([]);
   const [productOptions, setProductOptions] = React.useState([]);
   const [rates, setRates] = React.useState([]);
@@ -169,10 +171,46 @@ export default function FormContainer() {
     if (name === 'vendor') {
       const vendorRates = rates.filter(r => r[0] === event.target.value);
       setProductOptions(vendorRates.map(r => r[1]));
-      setRate(vendorRates[0]);
+      const newRate = vendorRates[0];
+      setRate(newRate);
+      if(query.cost != 0 && newRate) {
+        setPrice((query.cost * newRate[7]).toFixed(2));
+      } else {
+        setPrice('');
+        setMargin(0);
+      }
     } else if (name === 'product') {
-      setRate(rates.filter(r => r[0] === query.vendor && r[1] === event.target.value)[0]);
+      const newRate = rates.filter(r => r[0] === query.vendor && r[1] === event.target.value)[0];
+      setRate(newRate);
+      if(query.cost != 0) {
+        setPrice((query.cost * newRate[7]).toFixed(2));
+      } else {
+        setPrice('');
+        setMargin(0);
+      }
+    } else if(name === 'cost') {
+      if(rate) {
+        setPrice((event.target.value * rate[7]).toFixed(2));
+      } else {
+        setPrice('')
+      }
     }
+  }
+
+  const handlePriceChange = event => {
+    const newPrice = event.target.value;
+    setPrice(newPrice);
+    if(rate) {
+      if (newPrice == 0) {
+        setMargin(0);
+      } else {
+        let totalCost = parseFloat(query.cost) 
+                      + parseFloat(query.cost)*(parseFloat(rate[2])/100+parseFloat(rate[3])/100)
+                      + parseFloat(newPrice)*parseFloat(rate[4])/100;
+        let newMargin = 100*(newPrice-totalCost)/newPrice;
+        setMargin(newMargin);
+      }
+   }
   }
 
   const handleClose = () => {
@@ -257,6 +295,18 @@ export default function FormContainer() {
               }}
             />
           </FormControl>
+          <FormControl fullWidth={true} margin="normal">
+            <TextField
+              label="Price"
+              className={classes.formControl}
+              value={price}
+              onChange = {handlePriceChange}
+              type="tel"
+              InputProps={{
+                inputComponent: NumberFormatCustom,
+              }}
+            />
+          </FormControl>
         </form>
       </Paper>
       <Grid container className={classes.root} spacing={2} style={rate && rate.length ? {} : {display:'none'}}>
@@ -284,16 +334,16 @@ export default function FormContainer() {
                 <Card className={classes.card}>
                   <CardContent>
                     <Typography className={classes.title} color="textSecondary" gutterBottom>
-                      Suggested Retail Price
+                      Gross Margin
                     </Typography>
                     <Typography variant="h5" component="h2">
                       <NumberFormat 
                         thousandSeparator 
-                        prefix="$"
                         displayType="text"
                         fixedDecimalScale={true}
-                        decimalScale={2}
-                        value={rate?query.cost * rate[7]:0}
+                        decimalScale={1}
+                        suffix="%"
+                        value={margin}
                       />
                     </Typography>
                   </CardContent>
