@@ -11,12 +11,16 @@ import CardContent from '@material-ui/core/CardContent';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
+import SnackbarContent from '@material-ui/core/SnackbarContent';
+import Snackbar from '@material-ui/core/Snackbar';
+import CloseIcon from '@material-ui/icons/Close';
+import IconButton from '@material-ui/core/IconButton';
+import LinearProgress from '@material-ui/core/LinearProgress';
+
 
 
 const clientId =
   "763238195801-vqt0hkn4ag2foao41n5ujlss55tal838.apps.googleusercontent.com";
-const apiKey = 
-  "AIzaSyD52nPpXtkd_0qRGhWeQ99qWKZP1kzm3OA";
 const spreadsheetId =
   process.env.REACT_APP_SHEET_ID || "1FtOAjhoz0KdBx17xEVkojwCtcmiRDTEnnFBtE8FjcrY";
 
@@ -49,6 +53,9 @@ const useStyles = makeStyles(theme => ({
   },
   textField: {
     flexBasis: 200,
+  },
+  error: {
+    backgroundColor: theme.palette.error.dark,
   },
 }));
 
@@ -96,6 +103,8 @@ export default function FormContainer() {
   const [productOptions, setProductOptions] = React.useState([]);
   const [rates, setRates] = React.useState([]);
   const [rate, setRate] = React.useState([]);
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
 
   const signedInChanged = (s) => {
     setSignedIn(s);
@@ -115,9 +124,13 @@ export default function FormContainer() {
       ]
     })
     .then(response => {
+      setLoading(false);
       const rates = response.result.valueRanges[0].values;
       setRates(rates);
       setVendorOptions(['',...rates.map(r => r[0])].filter(onlyUnique).sort());
+    }).catch(resp => {
+      setLoading(false);
+      setErrorMessage(`Access Denied: ${resp.result.error.message}`);
     });
   }
 
@@ -125,7 +138,6 @@ export default function FormContainer() {
     window.gapi.load("client:auth2", () => {
       window.gapi.client
         .init({
-          apiKey,
           clientId,
           discoveryDocs: [
             "https://sheets.googleapis.com/$discovery/rest?version=v4"
@@ -165,6 +177,10 @@ export default function FormContainer() {
     }
   }
 
+  const handleClose = () => {
+    setErrorMessage('');
+  }
+
   const renderVendorOptions = () => {
     return vendorOptions.map((o,i) => {
       return (
@@ -183,6 +199,22 @@ export default function FormContainer() {
 
   return(
     <div>
+      <LinearProgress style={loading ? {} : {display:'none'}}/>
+      <Snackbar
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        open={errorMessage !== ''}
+        onClose={handleClose}
+      >
+        <SnackbarContent
+          className={classes.error}
+          message={<span id="message-id">{errorMessage}</span>}
+          action={[
+            <IconButton key="close" aria-label="Close" color="inherit" onClick={handleClose}>
+              <CloseIcon className={classes.icon} />
+            </IconButton>,
+          ]}
+        />
+      </Snackbar>
       <Paper className={classes.root}>
         <form className="container-fluid">
           <FormControl fullWidth={true} margin="normal">
