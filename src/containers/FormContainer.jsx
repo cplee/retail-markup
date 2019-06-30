@@ -63,6 +63,7 @@ function NumberFormatCustom(props) {
     <NumberFormat
       {...other}
       getInputRef={inputRef}
+      type="tel"
       onValueChange={values => {
         onChange({
           target: {
@@ -89,7 +90,7 @@ export default function FormContainer() {
   const [query, setQuery] = React.useState({
     vendor: '',
     product: '',
-    cost: 0
+    cost: '' 
   });
   const [vendorOptions, setVendorOptions] = React.useState([]);
   const [productOptions, setProductOptions] = React.useState([]);
@@ -101,14 +102,13 @@ export default function FormContainer() {
     if (s) {
       loadRates();
     } else {
-      window.gapi.auth2.getAuthInstance().signIn();
+      window.gapi.auth2.getAuthInstance().signIn({ux_mode: "redirect"});
     }
   }
 
   const loadRates = () => {
     window.gapi.client.sheets.spreadsheets.values
     .batchGet({
-      key: apiKey,
       spreadsheetId: spreadsheetId,
       ranges: [
         "Rules!A2:H100"
@@ -125,12 +125,13 @@ export default function FormContainer() {
     window.gapi.load("client:auth2", () => {
       window.gapi.client
         .init({
+          apiKey,
+          clientId,
           discoveryDocs: [
             "https://sheets.googleapis.com/$discovery/rest?version=v4"
           ],
-          clientId: clientId,
           scope:
-            "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.metadata.readonly"
+            "https://www.googleapis.com/auth/spreadsheets.readonly"
         })
         .then(() => {
           window.gapi.auth2
@@ -220,6 +221,7 @@ export default function FormContainer() {
               className={classes.formControl}
               value={query.cost} 
               onChange = {handleQueryChange('cost')}
+              type="tel"
               InputProps={{
                 inputComponent: NumberFormatCustom,
               }}
