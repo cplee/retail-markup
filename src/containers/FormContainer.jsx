@@ -135,6 +135,9 @@ export default function FormContainer() {
   }
 
   const signIn = () => {
+    if(!window.gapi) {
+      return;
+    }
     window.gapi.load("client:auth2", () => {
       window.gapi.client
         .init({
