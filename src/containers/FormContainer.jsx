@@ -25,11 +25,6 @@ const spreadsheetId =
   process.env.REACT_APP_SHEET_ID || "1FtOAjhoz0KdBx17xEVkojwCtcmiRDTEnnFBtE8FjcrY";
 
 const useStyles = makeStyles(theme => ({
-  '@global': {
-    body: {
-      backgroundColor: theme.palette.common.white,
-    },
-  },
   paper: {
     marginTop: theme.spacing(8),
     display: 'flex',
